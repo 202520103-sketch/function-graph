@@ -1,0 +1,2 @@
+streamlit
+pip install matplotlib
