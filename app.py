@@ -16,7 +16,7 @@ st.markdown("""
 
 st.title("🌊 Easy Function Grapher")
 
-# 안내 카드 (π 설명 제거)
+# 안내 카드 (π 사용법 추가)
 st.markdown("""
 <div style="background: linear-gradient(90deg,#b3e5fc,#81d4fa); padding:20px; border-radius:15px; color:#000;">
 <h3>📌 사용법 안내</h3>
@@ -25,7 +25,7 @@ st.markdown("""
 <li>✍️ 함수 입력창에 간단히 입력하세요 (예: sin(x), cos(x), tan(x), log(x+1), exp(x), abs(x-3), x**2, pi*x)</li>
 <li>💡 함수 설명:
 <ul>
-<li><b>sin(x), cos(x), tan(x)</b>: 삼각함수</li>
+<li><b>sin(x), cos(x), tan(x)</b>: 삼각함수, π 사용 가능 (예: sin(pi*x))</li>
 <li><b>log(x)</b>: 자연로그 (x>0, 자동 안전 처리)</li>
 <li><b>exp(x)</b>: e^x 지수 함수</li>
 <li><b>abs(x)</b>: 절댓값</li>
@@ -52,7 +52,7 @@ def parse_func(s):
     s = s.replace("tan", "np.tan")
     s = s.replace("exp", "np.exp")
     s = s.replace("abs", "np.abs")
-    s = s.replace("pi", "np.pi")
+    s = s.replace("pi", "np.pi")  # pi -> np.pi
     # log(x) -> np.log(np.clip(x,1e-6,None))
     pattern = r'log\((.*?)\)'
     s = re.sub(pattern, r'np.log(np.clip(\1,1e-6,None))', s)
