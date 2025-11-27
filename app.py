@@ -57,8 +57,7 @@ def parse_func(s):
     s = s.replace("tan", "np.tan")
     s = s.replace("exp", "np.exp")
     s = s.replace("abs", "np.abs")
-    s = s.replace("pi", "np.pi")  # pi -> np.pi
-    # log(x) -> np.log(np.clip(x,1e-6,None))
+    s = s.replace("pi", "np.pi")
     pattern = r'log\((.*?)\)'
     s = re.sub(pattern, r'np.log(np.clip(\1,1e-6,None))', s)
     return s
@@ -69,7 +68,7 @@ parsed_input = parse_func(func_input)
 if st.button("📈 그래프 그리기"):
     try:
         y = eval(parsed_input, {"__builtins__": {}}, {"x": x, "np": np})
-        y = np.where(np.abs(y) > 1e6, np.nan, y)
+        y = np.where(np.abs(y) > 1e6, np.nan, y)  # 이상치 처리
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)', line=dict(color="#0288d1", width=3)))
@@ -80,18 +79,26 @@ if st.button("📈 그래프 그리기"):
             x_inv = []
             for yi in y_vals:
                 try:
-                    root = fsolve(lambda t: eval(parsed_input, {"__builtins__": {}}, {"x": t, "np": np}) - yi, 0.0)
+                    # 초기값을 y값 주변 + 0으로 다양화
+                    root = fsolve(lambda t: eval(parsed_input, {"__builtins__": {}}, {"x": t, "np": np}) - yi, yi)
                     x_inv.append(root[0])
                 except:
                     x_inv.append(np.nan)
-            fig.add_trace(go.Scatter(x=y_vals, y=x_inv, mode='lines', name="f⁻¹(x)", line=dict(color="#d32f2f", width=3, dash='dash')))
+            x_inv = np.array(x_inv)
             
+            fig.add_trace(go.Scatter(x=y_vals, y=x_inv, mode='lines', name="f⁻¹(x)",
+                                     line=dict(color="#d32f2f", width=3, dash='dash')))
             # y=x 대각선
-            fig.add_trace(go.Scatter(x=y_vals, y=y_vals, mode='lines', name="y=x", line=dict(color="#388e3c", width=2, dash='dot')))
+            fig.add_trace(go.Scatter(x=y_vals, y=y_vals, mode='lines', name="y=x",
+                                     line=dict(color="#388e3c", width=2, dash='dot')))
         
+        # y 범위 자동 조절
+        y_min = min(np.nanmin(y), np.nanmin(x_inv) if show_inverse else np.nan)
+        y_max = max(np.nanmax(y), np.nanmax(x_inv) if show_inverse else np.nan)
         fig.update_layout(title=f"y = {func_input}",
                           xaxis_title="x",
                           yaxis_title="f(x)",
+                          yaxis=dict(range=[y_min - 0.5, y_max + 0.5]),
                           template="plotly_white",
                           width=900, height=500)
         st.plotly_chart(fig, use_container_width=True)
