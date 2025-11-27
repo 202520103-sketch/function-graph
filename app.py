@@ -2,14 +2,16 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
 
-st.set_page_config(page_title="Smart Function Grapher", layout="wide")
-st.title("Smart Function Grapher")
+st.set_page_config(page_title="Easy Function Grapher", layout="wide")
+st.title("Easy Function Grapher")
 
+# 안내 카드
 st.markdown("""
 <div style="background-color:#e0f7fa; padding:10px; border-radius:10px;">
 <b>사용법:</b><br>
-- x 범위 설정 → 수식 입력 → '그래프 그리기' 클릭<br>
-- 버튼 클릭 → 추천 수식 표시 → 필요하면 복사해서 입력창에 붙여넣기
+1. x 범위를 설정하세요.<br>
+2. 버튼 클릭 → 추천 수식 확인 → '복사' 클릭<br>
+3. 입력창에 붙여넣기 → '그래프 그리기' 클릭
 </div>
 """, unsafe_allow_html=True)
 
@@ -19,18 +21,26 @@ x_min = col1.number_input("x 최소값", value=-10.0)
 x_max = col2.number_input("x 최대값", value=10.0)
 x = np.linspace(x_min, x_max, 500)
 
-# 함수 입력
+# 수식 입력창
 func_input = st.text_input("함수 입력", "x**2")
 
-# 추천 수식 버튼
-st.markdown("**추천 수식 버튼 (클릭 → 복사해서 입력)**")
-buttons = [("절댓값", "abs(x)"), ("지수", "np.exp(x)"), ("로그", "np.log(np.clip(x,1e-6,None))"),
-           ("sin", "np.sin(x)"), ("cos", "np.cos(x)"), ("tan", "np.tan(x)")]
+# 추천 수식 버튼 + 복사
+st.markdown("**추천 수식 버튼 (복사해서 입력창에 붙여넣기)**")
+buttons = [
+    ("절댓값", "abs(x)"),
+    ("지수", "np.exp(x)"),
+    ("로그", "np.log(np.clip(x,1e-6,None))"),
+    ("sin(x)", "np.sin(x)"),
+    ("cos(x)", "np.cos(x)"),
+    ("tan(x)", "np.tan(x)"),
+    ("sin(pi/2 예시)", "np.sin(np.pi/2)")
+]
 cols = st.columns(len(buttons))
-
-for i, (label, val) in enumerate(buttons):
-    if cols[i].button(label):
-        st.code(val)
+for i, (label, code) in enumerate(buttons):
+    with cols[i]:
+        st.write(label)
+        st.code(code)
+        st.button("복사", key=f"copy_{i}", on_click=lambda c=code: st.experimental_set_query_params(copy=c))
 
 # 그래프 그리기
 if st.button("그래프 그리기"):
