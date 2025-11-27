@@ -2,10 +2,11 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
 import re
+from scipy.optimize import fsolve
 
 st.set_page_config(page_title="🌊 Easy Function Grapher", layout="wide")
 
-# 페이지 스타일 (하늘색/파란색 테마)
+# 페이지 스타일
 st.markdown("""
 <style>
 .stApp { background-color: #e0f7fa; font-family: 'Segoe UI', sans-serif; }
@@ -16,7 +17,7 @@ st.markdown("""
 
 st.title("🌊 Easy Function Grapher")
 
-# 안내 카드 (π 사용법 추가)
+# 안내 카드
 st.markdown("""
 <div style="background: linear-gradient(90deg,#b3e5fc,#81d4fa); padding:20px; border-radius:15px; color:#000;">
 <h3>📌 사용법 안내</h3>
@@ -32,6 +33,7 @@ st.markdown("""
 </ul>
 </li>
 <li>📈 '그래프 그리기' 버튼 클릭 → 바로 그래프 확인</li>
+<li>🔄 체크박스 선택 시 함수의 역함수 + y=x 대각선 표시</li>
 </ol>
 </div>
 """, unsafe_allow_html=True)
@@ -44,6 +46,9 @@ x = np.linspace(x_min, x_max, 500)
 
 # 함수 입력
 func_input = st.text_input("함수 입력 ✍️", "x**2")
+
+# 역함수 표시 여부
+show_inverse = st.checkbox("🔄 역함수 표시")
 
 # 입력 변환 함수
 def parse_func(s):
@@ -64,12 +69,26 @@ parsed_input = parse_func(func_input)
 if st.button("📈 그래프 그리기"):
     try:
         y = eval(parsed_input, {"__builtins__": {}}, {"x": x, "np": np})
-        
-        # 이상치 방지
         y = np.where(np.abs(y) > 1e6, np.nan, y)
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)', line=dict(color="#0288d1", width=3)))
+        
+        if show_inverse:
+            # 역함수 계산
+            y_vals = np.linspace(np.nanmin(y), np.nanmax(y), 500)
+            x_inv = []
+            for yi in y_vals:
+                try:
+                    root = fsolve(lambda t: eval(parsed_input, {"__builtins__": {}}, {"x": t, "np": np}) - yi, 0.0)
+                    x_inv.append(root[0])
+                except:
+                    x_inv.append(np.nan)
+            fig.add_trace(go.Scatter(x=y_vals, y=x_inv, mode='lines', name="f⁻¹(x)", line=dict(color="#d32f2f", width=3, dash='dash')))
+            
+            # y=x 대각선
+            fig.add_trace(go.Scatter(x=y_vals, y=y_vals, mode='lines', name="y=x", line=dict(color="#388e3c", width=2, dash='dot')))
+        
         fig.update_layout(title=f"y = {func_input}",
                           xaxis_title="x",
                           yaxis_title="f(x)",
