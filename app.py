@@ -113,9 +113,13 @@ if st.button("📈 그래프 그리기"):
                       template="plotly_white",
                       width=900, height=500)
     st.plotly_chart(fig, use_container_width=True)
-    st.markdown("""
+st.markdown("""
 <div style="background-color:#b3e5fc; padding:10px; border-radius:10px; margin-top:10px;">
-📌 그래프 안내: 그래프에서 원하는 영역을 **드래그하면 확대**할 수 있습니다.  
-마우스 오른쪽 클릭 → 'Reset axes' 선택 시 원래 크기로 돌아갑니다.
+📌 그래프 안내: 
+<ul>
+<li>💡 원하는 영역을 드래그하면 확대할 수 있습니다.</li>
+<li>📱 모바일: 오른쪽 위 <b>집 모양 버튼</b> 클릭 시 원래 크기로 돌아갑니다.</li>
+<li>🖱️ PC: 마우스 오른쪽 클릭 → <b>Reset axes</b> 선택 시 원래 크기로 돌아갑니다.</li>
+</ul>
 </div>
 """, unsafe_allow_html=True)
