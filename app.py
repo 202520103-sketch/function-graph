@@ -3,46 +3,53 @@ import numpy as np
 import plotly.graph_objs as go
 
 # 페이지 설정
-st.set_page_config(page_title="Interactive Function Grapher", layout="wide")
-st.title("Interactive Function Grapher")
+st.set_page_config(page_title="Smart Function Grapher", layout="wide")
+st.markdown(
+    """
+    <style>
+    .stApp { background-color: #f5f7fa; font-family: 'Segoe UI', sans-serif;}
+    .stButton>button { background-color: #4CAF50; color:white; font-size:16px; padding:8px 16px; border-radius:5px; margin:3px;}
+    .stTextInput>div>div>input { font-size:16px; padding:5px; border-radius:5px; border:1px solid #ccc;}
+    </style>
+    """, unsafe_allow_html=True
+)
 
-# 설명 카드
+# 제목
+st.title("Smart Function Grapher")
 st.markdown("""
 <div style="background-color:#e0f7fa; padding:15px; border-radius:10px;">
-<b>사용법 안내</b><br>
+<b>사용법:</b><br>
 1. x 범위를 설정하세요.<br>
-2. 함수 입력창에 수식을 직접 입력할 수 있습니다. (예: x**2 + 2*x + 1)<br>
-3. 특수 함수 버튼 클릭 시 입력창에 자동 삽입됩니다.<br>
-4. 필요 시 초기화 버튼으로 수식을 지우세요.<br>
-5. '그래프 그리기' 버튼 클릭 → 그래프 확인.<br>
+2. 함수 입력창에 기본 수식을 입력하거나, 버튼 클릭으로 특수 함수를 추가하세요.<br>
+3. '그래프 그리기' 버튼 클릭 → 그래프 확인.<br>
 <br>
-<b>특수 함수 버튼</b>: abs(x), np.exp(x), np.log(x)
+<b>특수 함수 버튼</b>: 절댓값, 지수, 로그, 사인, 코사인, 탄젠트 등
 </div>
 """, unsafe_allow_html=True)
 
-# x 범위 입력
+# x 범위
 col1, col2 = st.columns(2)
 x_min = col1.number_input("x 최소값", value=-10.0)
 x_max = col2.number_input("x 최대값", value=10.0)
 x = np.linspace(x_min, x_max, 500)
 
-# 수식 입력 및 특수 함수 삽입
-func_input = st.text_input("함수 입력 (x 사용, 예: x**2 + 2*x + 1)", "x**2")
+# 함수 입력
+func_input = st.text_input("함수 입력 (예: x**2 + 2*x + 1)", "x**2")
 
-col_abs, col_exp, col_log, col_reset = st.columns(4)
-if col_abs.button("abs(x)"):
-    func_input += " + abs(x)"
-if col_exp.button("exp(x)"):
-    func_input += " + np.exp(x)"
-if col_log.button("log(x)"):
-    func_input += " + np.log(x)"
-if col_reset.button("초기화"):
-    func_input = ""
+# 특수 함수 버튼
+col_abs, col_exp, col_log, col_sin, col_cos, col_tan, col_reset = st.columns(7)
+if col_abs.button("abs()"): func_input += " + abs(x)"
+if col_exp.button("exp()"): func_input += " + np.exp(x)"
+if col_log.button("log()"): func_input += " + np.log(np.clip(x, 1e-6, None))"
+if col_sin.button("sin()"): func_input += " + np.sin(x)"
+if col_cos.button("cos()"): func_input += " + np.cos(x)"
+if col_tan.button("tan()"): func_input += " + np.tan(x)"
+if col_reset.button("초기화"): func_input = ""
 
-# 그래프 버튼
+# 그래프 그리기
 if st.button("그래프 그리기"):
     try:
-        y = eval(func_input, {"__builtins__": {}}, {"x": x, "np": np, "abs": np.abs})
+        y = eval(func_input, {"__builtins__": {}}, {"x": x, "np": np, "abs": np.abs, "sin": np.sin, "cos": np.cos, "tan": np.tan})
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)'))
         fig.update_layout(
