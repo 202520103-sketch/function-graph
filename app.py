@@ -23,13 +23,13 @@ st.markdown("""
 <h3>📌 사용법 안내</h3>
 <ol>
 <li>🔢 x 최소/최대 범위를 설정하세요.</li>
-<li>✍️ 함수 입력창에 간단히 입력하세요 (예: sin(x), cos(x), tan(x), log(x+1), exp(x), abs(x-3), x**2, pi*x)</li>
+<li>✍️ 함수 입력창에 간단히 입력하세요 (예: sin(x), cos(x), tan(x), log(x+1), exp(x), abs(x-3), x**2, pi*x, (x+1)**x)</li>
 <li>💡 함수 설명:
 <ul>
-<li><b>sin(x), cos(x), tan(x)</b>: 삼각함수, π 사용 가능 (예: sin(pi*x))</li>
-<li><b>log(x)</b>: 자연로그 (x>0, 자동 안전 처리)</li>
-<li><b>exp(x)</b>: e^x 지수 함수</li>
-<li><b>abs(x)</b>: 절댓값</li>
+<li><b>삼각함수</b>: sin(x), cos(x), tan(x), π 사용 가능 (예: sin(pi*x))</li>
+<li><b>로그</b>: log(x), x>0 안전 처리</li>
+<li><b>지수함수</b>: exp(x) 또는 base**exp, 밑과 지수 모두 수식 가능, 밑>0 자동 처리</li>
+<li><b>절댓값</b>: abs(x)</li>
 </ul>
 </li>
 <li>📈 '그래프 그리기' 버튼 클릭 → 바로 그래프 확인</li>
@@ -58,6 +58,7 @@ def parse_func(s):
     s = s.replace("exp", "np.exp")
     s = s.replace("abs", "np.abs")
     s = s.replace("pi", "np.pi")
+    # log(x) -> np.log(np.clip(x,1e-6,None))
     pattern = r'log\((.*?)\)'
     s = re.sub(pattern, r'np.log(np.clip(\1,1e-6,None))', s)
     return s
@@ -67,19 +68,20 @@ parsed_input = parse_func(func_input)
 # 그래프 그리기
 if st.button("📈 그래프 그리기"):
     try:
-        y = eval(parsed_input, {"__builtins__": {}}, {"x": x, "np": np})
-        y = np.where(np.abs(y) > 1e6, np.nan, y)  # 이상치 처리
+        # x에 대한 y 계산
+        y_raw = np.array([eval(parsed_input, {"__builtins__": {}}, {"x": xi, "np": np}) for xi in x])
+        
+        # 밑>0 조건 처리 (base**exp 형태 포함)
+        y = np.where(np.isfinite(y_raw) & (y_raw<1e6) & (y_raw>-1e6), y_raw, np.nan)
         
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)', line=dict(color="#0288d1", width=3)))
         
         if show_inverse:
-            # 역함수 계산
             y_vals = np.linspace(np.nanmin(y), np.nanmax(y), 500)
             x_inv = []
             for yi in y_vals:
                 try:
-                    # 초기값을 y값 주변 + 0으로 다양화
                     root = fsolve(lambda t: eval(parsed_input, {"__builtins__": {}}, {"x": t, "np": np}) - yi, yi)
                     x_inv.append(root[0])
                 except:
@@ -88,7 +90,6 @@ if st.button("📈 그래프 그리기"):
             
             fig.add_trace(go.Scatter(x=y_vals, y=x_inv, mode='lines', name="f⁻¹(x)",
                                      line=dict(color="#d32f2f", width=3, dash='dash')))
-            # y=x 대각선
             fig.add_trace(go.Scatter(x=y_vals, y=y_vals, mode='lines', name="y=x",
                                      line=dict(color="#388e3c", width=2, dash='dot')))
         
