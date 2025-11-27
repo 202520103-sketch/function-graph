@@ -2,18 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
 
-# 페이지 설정
 st.set_page_config(page_title="Smart Function Grapher", layout="wide")
-st.markdown(
-    """
-    <style>
-    .stApp { background-color: #f5f7fa; font-family: 'Segoe UI', sans-serif;}
-    .stButton>button { background-color: #4CAF50; color:white; font-size:16px; padding:8px 16px; border-radius:5px; margin:3px;}
-    .stTextInput>div>div>input { font-size:16px; padding:5px; border-radius:5px; border:1px solid #ccc;}
-    </style>
-    """, unsafe_allow_html=True
-)
-
 st.title("Smart Function Grapher")
 
 # 설명 카드
@@ -37,13 +26,12 @@ if "func_input" not in st.session_state:
     st.session_state["func_input"] = "x**2"
 
 # 수식 입력
-st.text_input("함수 입력", key="func_input")
+st.session_state["func_input"] = st.text_input("함수 입력", st.session_state["func_input"])
 
-# 버튼 클릭 시 수식 입력창에 바로 삽입
-def insert_func(fstr):
-    # 현재 값 가져오기
-    val = st.session_state["func_input"]
-    st.session_state["func_input"] = val + " + " + fstr
+# 버튼 클릭 시 함수 삽입
+def add_func(fstr):
+    current = st.session_state["func_input"]
+    st.session_state["func_input"] = current + " + " + fstr
 
 # 버튼 가로 정렬
 buttons = [("abs()", "abs(x)"), ("exp()", "np.exp(x)"), ("log()", "np.log(np.clip(x,1e-6,None))"),
@@ -55,7 +43,7 @@ for i, (label, fstr) in enumerate(buttons):
         if fstr == "RESET":
             st.session_state["func_input"] = ""
         else:
-            insert_func(fstr)
+            add_func(fstr)
 
 # 그래프 그리기
 if st.button("그래프 그리기"):
