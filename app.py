@@ -3,28 +3,35 @@ import numpy as np
 import plotly.graph_objs as go
 import re
 
-st.set_page_config(page_title="🎨 Simple & Fun Grapher", layout="wide")
+st.set_page_config(page_title="🌊 Easy Function Grapher", layout="wide")
 
-# 페이지 스타일
+# 페이지 스타일 (하늘색/파란색 테마)
 st.markdown("""
 <style>
-.stApp { background-color: #f0f8ff; font-family: 'Segoe UI', sans-serif; }
-.stButton>button { font-size:16px; padding:8px 12px; border-radius:8px; margin:5px; background:linear-gradient(90deg,#a1c4fd,#c2e9fb); color:#000; }
-.stTextInput>div>div>input { font-size:16px; padding:5px; border-radius:5px; border:1px solid #ccc;}
+.stApp { background-color: #e0f7fa; font-family: 'Segoe UI', sans-serif; }
+.stButton>button { font-size:16px; padding:8px 12px; border-radius:8px; margin:5px; background:linear-gradient(90deg,#81d4fa,#29b6f6); color:#000; }
+.stTextInput>div>div>input { font-size:16px; padding:5px; border-radius:5px; border:1px solid #29b6f6;}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🎨 Simple & Fun Function Grapher")
+st.title("🌊 Easy Function Grapher")
 
-# 안내 카드
+# 안내 카드 (π 설명 제거)
 st.markdown("""
-<div style="background: linear-gradient(90deg,#ffecd2,#fcb69f); padding:20px; border-radius:15px;">
+<div style="background: linear-gradient(90deg,#b3e5fc,#81d4fa); padding:20px; border-radius:15px; color:#000;">
 <h3>📌 사용법 안내</h3>
 <ol>
 <li>🔢 x 최소/최대 범위를 설정하세요.</li>
-<li>✍️ 함수 입력창에 간단히 입력하세요 (예: sin(x), log(x+1), exp(x), abs(x-3), x**2, pi*x)</li>
-<li>📈 '그래프 그리기' 버튼 클릭 → 바로 함수 그래프 확인</li>
-<li>💡 삼각함수, 지수, 로그, 절댓값, π 모두 지원</li>
+<li>✍️ 함수 입력창에 간단히 입력하세요 (예: sin(x), cos(x), tan(x), log(x+1), exp(x), abs(x-3), x**2, pi*x)</li>
+<li>💡 함수 설명:
+<ul>
+<li><b>sin(x), cos(x), tan(x)</b>: 삼각함수</li>
+<li><b>log(x)</b>: 자연로그 (x>0, 자동 안전 처리)</li>
+<li><b>exp(x)</b>: e^x 지수 함수</li>
+<li><b>abs(x)</b>: 절댓값</li>
+</ul>
+</li>
+<li>📈 '그래프 그리기' 버튼 클릭 → 바로 그래프 확인</li>
 </ol>
 </div>
 """, unsafe_allow_html=True)
@@ -38,7 +45,7 @@ x = np.linspace(x_min, x_max, 500)
 # 함수 입력
 func_input = st.text_input("함수 입력 ✍️", "x**2")
 
-# 입력 변환 함수 (π, 삼각함수, 로그, 지수, 절댓값)
+# 입력 변환 함수
 def parse_func(s):
     s = s.replace("sin", "np.sin")
     s = s.replace("cos", "np.cos")
@@ -57,13 +64,18 @@ parsed_input = parse_func(func_input)
 if st.button("📈 그래프 그리기"):
     try:
         y = eval(parsed_input, {"__builtins__": {}}, {"x": x, "np": np})
+        
+        # 이상치 방지
+        y = np.where(np.abs(y) > 1e6, np.nan, y)
+        
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)', line=dict(color="#FF5733", width=3)))
+        fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name='f(x)', line=dict(color="#0288d1", width=3)))
         fig.update_layout(title=f"y = {func_input}",
                           xaxis_title="x",
                           yaxis_title="f(x)",
                           template="plotly_white",
                           width=900, height=500)
         st.plotly_chart(fig, use_container_width=True)
+        
     except Exception as e:
         st.error(f"⚠️ 오류: {e}")
